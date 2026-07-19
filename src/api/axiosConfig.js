@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  baseURL: 'https://gestion-conges-rc-backend.onrender.com/api',
 });
 
 // Intercepteur : ajoute automatiquement le token JWT à chaque requête si l'utilisateur est connecté

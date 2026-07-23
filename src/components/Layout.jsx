@@ -4,47 +4,32 @@ import { useAuth } from '../context/AuthContext';
 import Logo from './Logo';
 import api from '../api/axiosConfig';
 
-const menuParRole = {
-  1: [
-    { label: 'Mon espace', path: '/dashboard', icon: '🏠' },
-  ],
-  2: [
-    { label: 'Validation', path: '/validation', icon: '✅' },
-    { label: 'Employés', path: '/rh/employes', icon: '👥' },
-    { label: 'Récupération', path: '/rh/recuperation', icon: '🎯' },
-  ],
-  3: [
-    { label: 'Tableau de bord', path: '/rh', icon: '🏠' },
-    { label: 'Employés', path: '/rh/employes', icon: '👥' },
-    { label: 'Validation', path: '/validation', icon: '✅' },
-    { label: 'Récupération', path: '/rh/recuperation', icon: '🎯' },
-    { label: 'Statistiques', path: '/rh/statistiques', icon: '📊' },
-    { label: 'Rapports', path: '/rh/rapports', icon: '📄' },
-  ],
-};
-
 function Layout({ children }) {
   const { user, logout } = useAuth();
+
   const menuParRole = {
-  1: [
-    { label: 'Mon espace', path: '/dashboard', icon: '🏠' },
-  ],
-  2: [
-    { label: 'Déclarer RC', path: '/declarer', icon: '📝' },
-    { label: 'Valider congés', path: '/validation', icon: '✅' },
-    { label: 'Employés', path: '/rh/employes', icon: '👥' },
-    { label: 'Récupération', path: '/rh/recuperation', icon: '🎯' },
-  ],
-  3: [
-    { label: 'Tableau de bord', path: '/rh', icon: '🏠' },
-    { label: 'Employés', path: '/rh/employes', icon: '👥' },
-    { label: 'RC à valider', path: '/rh/validation-rc', icon: '✅' },
-    { label: 'Congés (info)', path: '/rh/conges-info', icon: '📋' },
-    { label: 'Récupération', path: '/rh/recuperation', icon: '🎯' },
-    { label: 'Statistiques', path: '/rh/statistiques', icon: '📊' },
-    { label: 'Rapports', path: '/rh/rapports', icon: '📄' },
-  ],
-};
+    1: [
+      { label: 'Mon espace', path: '/dashboard', icon: '🏠' },
+    ],
+    2: [
+      { label: 'Déclarer RC', path: '/declarer', icon: '📝' },
+      { label: 'Valider congés', path: '/validation', icon: '✅' },
+      { label: 'Employés', path: '/rh/employes', icon: '👥' },
+      { label: 'Récupération', path: '/rh/recuperation', icon: '🎯' },
+    ],
+    3: [
+      { label: 'Tableau de bord', path: '/rh', icon: '🏠' },
+      { label: 'Employés', path: '/rh/employes', icon: '👥' },
+      { label: 'RC à valider', path: '/rh/validation-rc', icon: '✅' },
+      { label: 'Congés (info)', path: '/rh/conges-info', icon: '📋' },
+      { label: 'Récupération', path: '/rh/recuperation', icon: '🎯' },
+      { label: 'Statistiques', path: '/rh/statistiques', icon: '📊' },
+      { label: 'Rapports', path: '/rh/rapports', icon: '📄' },
+    ],
+  };
+
+  const menu = menuParRole[user?.role_id] || [];
+
   const [heure, setHeure] = useState(new Date());
   const [nbEnAttente, setNbEnAttente] = useState(0);
 

@@ -9,8 +9,9 @@ function Dashboard() {
   const { user } = useAuth();
   const [solde, setSolde] = useState(null);
   const [historique, setHistorique] = useState([]);
-  const [dateTravail, setDateTravail] = useState('');
-  const [motif, setMotif] = useState('');
+  const [conges, setConges] = useState([]);
+  const [dateDebut, setDateDebut] = useState('');
+  const [dateFin, setDateFin] = useState('');
   const [message, setMessage] = useState('');
 
   const chargerDonnees = async () => {
@@ -19,6 +20,8 @@ function Dashboard() {
       setSolde(soldeRes.data);
       const histoRes = await api.get('/rc/historique');
       setHistorique(histoRes.data.historique);
+      const congesRes = await api.get('/conges/mes-conges');
+      setConges(congesRes.data.conges);
     } catch (error) {
       console.error('Erreur chargement:', error);
     }
@@ -28,14 +31,14 @@ function Dashboard() {
     chargerDonnees();
   }, []);
 
-  const handleDeclarer = async (e) => {
+  const handleDemanderConge = async (e) => {
     e.preventDefault();
     setMessage('');
     try {
-      await api.post('/rc/declarer', { date_travail: dateTravail, motif });
-      setMessage('✅ RC déclaré avec succès, en attente de validation');
-      setDateTravail('');
-      setMotif('');
+      const res = await api.post('/conges/demander', { date_debut: dateDebut, date_fin: dateFin });
+      setMessage(`✅ Demande envoyée : ${res.data.nombre_jours} jour(s), en attente de validation`);
+      setDateDebut('');
+      setDateFin('');
       chargerDonnees();
     } catch (error) {
       setMessage('❌ ' + (error.response?.data?.message || 'Erreur'));
@@ -59,10 +62,14 @@ function Dashboard() {
   const statutBadge = (statut) => {
     const map = {
       'Disponible': { bg: theme.colors.successBg, text: theme.colors.success },
+      'Validé Chef': { bg: theme.colors.accentBg, text: theme.colors.accent },
       'En attente': { bg: theme.colors.warningBg, text: theme.colors.warning },
+      'Validée': { bg: theme.colors.successBg, text: theme.colors.success },
       'Expiré': { bg: theme.colors.dangerBg, text: theme.colors.danger },
       'Compensé': { bg: theme.colors.dangerBg, text: theme.colors.danger },
       'Utilisé': { bg: theme.colors.accentBg, text: theme.colors.accent },
+      'Refusée': { bg: theme.colors.dangerBg, text: theme.colors.danger },
+      'Refusé': { bg: theme.colors.dangerBg, text: theme.colors.danger },
     };
     const style = map[statut] || { bg: '#eee', text: '#555' };
     return (
@@ -86,42 +93,62 @@ function Dashboard() {
       </div>
 
       <div style={{ ...cardStyle, marginBottom: '32px' }}>
-        <h2 style={{ fontSize: '16px', fontWeight: 600, margin: '0 0 16px', color: theme.colors.text }}>
-          Déclarer un jour travaillé
+        <h2 style={{ fontSize: '16px', fontWeight: 600, margin: '0 0 6px', color: theme.colors.text }}>
+          Demander un congé RC
         </h2>
-        <form onSubmit={handleDeclarer} style={{ display: 'grid', gap: '12px', gridTemplateColumns: '1fr 1fr' }}>
-          <input
-            style={inputStyle}
-            type="date"
-            value={dateTravail}
-            onChange={(e) => setDateTravail(e.target.value)}
-            required
-          />
-          <input
-            style={inputStyle}
-            type="text"
-            placeholder="Motif (ex: Travail jour férié)"
-            value={motif}
-            onChange={(e) => setMotif(e.target.value)}
-          />
+        <p style={{ fontSize: '13px', color: theme.colors.textMuted, margin: '0 0 16px' }}>
+          Si la période inclut un vendredi, le samedi suivant est automatiquement compté.
+        </p>
+        <form onSubmit={handleDemanderConge} style={{ display: 'grid', gap: '12px', gridTemplateColumns: '1fr 1fr' }}>
+          <div>
+            <label style={{ fontSize: '13px', color: theme.colors.textMuted }}>Du</label>
+            <input style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }} type="date" value={dateDebut} onChange={(e) => setDateDebut(e.target.value)} required />
+          </div>
+          <div>
+            <label style={{ fontSize: '13px', color: theme.colors.textMuted }}>Au</label>
+            <input style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }} type="date" value={dateFin} onChange={(e) => setDateFin(e.target.value)} required />
+          </div>
           <button
             type="submit"
             style={{
-              gridColumn: 'span 2',
-              padding: '10px',
-              borderRadius: theme.radius,
-              border: 'none',
-              background: theme.colors.accent,
-              color: '#fff',
-              fontSize: '14px',
-              fontWeight: 600,
-              cursor: 'pointer',
+              gridColumn: 'span 2', padding: '10px', borderRadius: theme.radius, border: 'none',
+              background: theme.colors.accent, color: '#fff', fontSize: '14px', fontWeight: 600, cursor: 'pointer',
             }}
           >
-            Déclarer
+            Envoyer la demande
           </button>
         </form>
         {message && <p style={{ marginTop: '10px', fontSize: '14px' }}>{message}</p>}
+      </div>
+
+      <div style={{ ...cardStyle, marginBottom: '32px' }}>
+        <h2 style={{ fontSize: '16px', fontWeight: 600, margin: '0 0 16px', color: theme.colors.text }}>
+          Mes demandes de congé
+        </h2>
+        {conges.length === 0 ? (
+          <p style={{ color: theme.colors.textMuted, fontSize: '14px' }}>Aucune demande.</p>
+        ) : (
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+            <thead>
+              <tr style={{ textAlign: 'left', borderBottom: `1px solid ${theme.colors.border}` }}>
+                <th style={{ padding: '8px 0', color: theme.colors.textMuted, fontWeight: 500 }}>Du</th>
+                <th style={{ padding: '8px 0', color: theme.colors.textMuted, fontWeight: 500 }}>Au</th>
+                <th style={{ padding: '8px 0', color: theme.colors.textMuted, fontWeight: 500 }}>Jours</th>
+                <th style={{ padding: '8px 0', color: theme.colors.textMuted, fontWeight: 500 }}>Statut</th>
+              </tr>
+            </thead>
+            <tbody>
+              {conges.map((c) => (
+                <tr key={c.id} style={{ borderBottom: `1px solid ${theme.colors.border}` }}>
+                  <td style={{ padding: '10px 0' }}>{c.date_debut?.substring(0, 10)}</td>
+                  <td style={{ padding: '10px 0' }}>{c.date_fin?.substring(0, 10)}</td>
+                  <td style={{ padding: '10px 0' }}>{c.nombre_jours}</td>
+                  <td style={{ padding: '10px 0' }}>{statutBadge(c.statut)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
       <div style={cardStyle}>
@@ -133,7 +160,6 @@ function Dashboard() {
             <tr style={{ textAlign: 'left', borderBottom: `1px solid ${theme.colors.border}` }}>
               <th style={{ padding: '8px 0', color: theme.colors.textMuted, fontWeight: 500 }}>Date travaillée</th>
               <th style={{ padding: '8px 0', color: theme.colors.textMuted, fontWeight: 500 }}>Motif</th>
-              <th style={{ padding: '8px 0', color: theme.colors.textMuted, fontWeight: 500 }}>Acquisition</th>
               <th style={{ padding: '8px 0', color: theme.colors.textMuted, fontWeight: 500 }}>Expiration</th>
               <th style={{ padding: '8px 0', color: theme.colors.textMuted, fontWeight: 500 }}>Statut</th>
             </tr>
@@ -143,7 +169,6 @@ function Dashboard() {
               <tr key={rc.id} style={{ borderBottom: `1px solid ${theme.colors.border}` }}>
                 <td style={{ padding: '10px 0' }}>{rc.date_travail?.substring(0, 10)}</td>
                 <td style={{ padding: '10px 0', color: theme.colors.textMuted }}>{rc.motif}</td>
-                <td style={{ padding: '10px 0' }}>{rc.date_acquisition?.substring(0, 10)}</td>
                 <td style={{ padding: '10px 0' }}>{rc.date_expiration?.substring(0, 10)}</td>
                 <td style={{ padding: '10px 0' }}>{statutBadge(rc.statut)}</td>
               </tr>

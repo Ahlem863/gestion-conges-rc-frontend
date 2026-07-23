@@ -25,13 +25,13 @@ function Login() {
       login(response.data.user, response.data.token);
 
       const role = response.data.user.role_id;
-      if (role === 1) {
-        navigate('/dashboard');
-      } else if (role === 2) {
-        navigate('/validation');
-      } else if (role === 3) {
-        navigate('/rh');
-      }
+if (role === 1) {
+  navigate('/dashboard');
+} else if (role === 2) {
+  navigate('/declarer');
+} else if (role === 3) {
+  navigate('/rh');
+}
     } catch (error) {
       setErreur(error.response?.data?.message || 'Erreur de connexion');
     }

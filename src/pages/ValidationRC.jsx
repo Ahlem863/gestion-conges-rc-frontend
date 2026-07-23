@@ -10,12 +10,10 @@ function ValidationRC() {
   const [liste, setListe] = useState([]);
   const [message, setMessage] = useState('');
 
-  const estRH = user?.role_id === 3;
-
   const chargerListe = async () => {
     try {
-      const res = await api.get('/rc/en-attente');
-      setListe(res.data.rc_en_attente);
+      const res = await api.get('/conges/en-attente');
+      setListe(res.data.conges);
     } catch (error) {
       console.error('Erreur chargement:', error);
     }
@@ -28,7 +26,7 @@ function ValidationRC() {
   const handleDecision = async (id, decision) => {
     setMessage('');
     try {
-      const res = await api.put(`/rc/${id}/valider`, { decision });
+      const res = await api.put(`/conges/${id}/valider`, { decision });
       setMessage(`✅ ${res.data.message}`);
       chargerListe();
     } catch (error) {
@@ -61,13 +59,11 @@ function ValidationRC() {
         Bonjour, {user?.prenom}
       </h1>
       <p style={{ fontSize: '13px', color: theme.colors.textMuted, margin: '0 0 24px' }}>
-        {estRH
-          ? 'Validation finale — RC déjà approuvés par les chefs de structure'
-          : 'Validation des demandes de votre structure'}
+        Demandes de congé RC de votre structure
       </p>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr', maxWidth: '260px', marginBottom: '32px' }}>
-        <StatCard label={estRH ? 'En attente de validation finale' : 'En attente de votre validation'} value={liste.length} variant="warning" />
+        <StatCard label="Demandes en attente" value={liste.length} variant="warning" />
       </div>
 
       {message && <p style={{ marginBottom: '16px', fontSize: '14px' }}>{message}</p>}
@@ -84,26 +80,22 @@ function ValidationRC() {
             <thead>
               <tr style={{ textAlign: 'left', borderBottom: `1px solid ${theme.colors.border}` }}>
                 <th style={{ padding: '8px 0', color: theme.colors.textMuted, fontWeight: 500 }}>Employé</th>
-                <th style={{ padding: '8px 0', color: theme.colors.textMuted, fontWeight: 500 }}>Structure</th>
-                <th style={{ padding: '8px 0', color: theme.colors.textMuted, fontWeight: 500 }}>Date travaillée</th>
-                <th style={{ padding: '8px 0', color: theme.colors.textMuted, fontWeight: 500 }}>Motif</th>
+                <th style={{ padding: '8px 0', color: theme.colors.textMuted, fontWeight: 500 }}>Du</th>
+                <th style={{ padding: '8px 0', color: theme.colors.textMuted, fontWeight: 500 }}>Au</th>
+                <th style={{ padding: '8px 0', color: theme.colors.textMuted, fontWeight: 500 }}>Jours</th>
                 <th style={{ padding: '8px 0', color: theme.colors.textMuted, fontWeight: 500 }}>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {liste.map((rc) => (
-                <tr key={rc.id} style={{ borderBottom: `1px solid ${theme.colors.border}` }}>
-                  <td style={{ padding: '10px 0' }}>{rc.prenom} {rc.nom}</td>
-                  <td style={{ padding: '10px 0', color: theme.colors.accent }}>{rc.departement}</td>
-                  <td style={{ padding: '10px 0' }}>{rc.date_travail?.substring(0, 10)}</td>
-                  <td style={{ padding: '10px 0', color: theme.colors.textMuted }}>{rc.motif}</td>
+              {liste.map((c) => (
+                <tr key={c.id} style={{ borderBottom: `1px solid ${theme.colors.border}` }}>
+                  <td style={{ padding: '10px 0' }}>{c.prenom} {c.nom}</td>
+                  <td style={{ padding: '10px 0' }}>{c.date_debut?.substring(0, 10)}</td>
+                  <td style={{ padding: '10px 0' }}>{c.date_fin?.substring(0, 10)}</td>
+                  <td style={{ padding: '10px 0', fontWeight: 600 }}>{c.nombre_jours}</td>
                   <td style={{ padding: '10px 0' }}>
-                    <button style={btnStyle('valider')} onClick={() => handleDecision(rc.id, 'valider')}>
-                      Valider
-                    </button>
-                    <button style={btnStyle('refuser')} onClick={() => handleDecision(rc.id, 'refuser')}>
-                      Refuser
-                    </button>
+                    <button style={btnStyle('valider')} onClick={() => handleDecision(c.id, 'valider')}>Valider</button>
+                    <button style={btnStyle('refuser')} onClick={() => handleDecision(c.id, 'refuser')}>Refuser</button>
                   </td>
                 </tr>
               ))}
